@@ -1,0 +1,89 @@
+# Farm Command — PostgreSQL (with TimescaleDB for telemetry) + one Go
+# container serving API and dashboard.
+#
+#   docker compose up -d --build
+#     app      → http://localhost:8082   (dashboard and /api on the same port)
+#     adminer  → http://localhost:8083   (database web UI)
+#     postgres → localhost:5433          (for `go run` outside docker)
+#
+# Defaults avoid the crowded 8080/5432; copy .env.example to .env to change.
+name: farm-command
+
+services:
+  db:
+    # PostgreSQL 17 plus the TimescaleDB extension (telemetry hypertable,
+    # compression, retention — backend/internal/db/timescale.go). Same data
+    # directory format as postgres:17-alpine, so existing volumes carry over.
+    # Pinned: "latest" would upgrade the extension on any pull, and a volume
+    # created by a newer TimescaleDB cannot be opened by an older one. Bump
+    # deliberately, then run ALTER EXTENSION timescaledb UPDATE.
+    image: timescale/timescaledb:2.30.2-pg17
+    restart: unless-stopped
+    # the image only writes this into postgresql.conf for a fresh volume;
+    # passing it here also covers volumes created by plain postgres:17
+    command: postgres -c shared_preload_libraries=timescaledb
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-farm}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-farm-dev-password}
+      POSTGRES_DB: ${POSTGRES_DB:-farmdb}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "${POSTGRES_PORT:-5433}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-farm} -d ${POSTGRES_DB:-farmdb}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build: .
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-farm}:${POSTGRES_PASSWORD:-farm-dev-password}@db:5432/${POSTGRES_DB:-farmdb}?sslmode=disable
+      GIN_MODE: release
+      SEED_DEMO_DATA: ${SEED_DEMO_DATA:-true}
+      # keep access tokens valid across restarts (unset = random per boot)
+      JWT_SECRET: ${JWT_SECRET:-}
+      # "Sign in with Google" (empty = disabled; see .env.example for setup)
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      # drop telemetry older than N days (empty/0 = keep everything)
+      TELEMETRY_RETENTION_DAYS: ${TELEMETRY_RETENTION_DAYS:-0}
+      # Irrigation engine tick cadence (empty = 30s)
+      ENGINE_INTERVAL: ${ENGINE_INTERVAL:-}
+      # Alert activations → one Telegram chat (empty = disabled)
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
+      SMS_GATEWAY_URL: ${SMS_GATEWAY_URL:-}
+      SMS_GATEWAY_TOKEN: ${SMS_GATEWAY_TOKEN:-}
+      # "production" makes JWT_SECRET mandatory
+      ENV: ${ENV:-}
+      # refuse telemetry from nodes without a device key (default: on in production)
+      REQUIRE_DEVICE_KEY: ${REQUIRE_DEVICE_KEY:-}
+      CORS_ORIGINS: ${CORS_ORIGINS:-}
+    ports:
+      - "${APP_PORT:-8082}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8000/api/health || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+  adminer:
+    image: adminer:5
+    restart: unless-stopped
+    environment:
+      ADMINER_DEFAULT_DB_DRIVER: postgresql
+      ADMINER_DEFAULT_DB_HOST: db
+    ports:
+      - "${ADMINER_PORT:-8083}:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:

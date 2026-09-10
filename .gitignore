@@ -1,0 +1,31 @@
+# dependencies & build output
+node_modules/
+dist/
+
+# local env files (keep the .example templates)
+.env
+.env.*
+!**/.env.example
+
+# go build artifacts
+backend/bin/
+
+# misc
+.DS_Store
+*.log
+
+# editor / OS
+.idea/
+.vscode/
+Thumbs.db
+
+# test, cache & tooling output
+coverage/
+.vite/
+*.tsbuildinfo
+.expo/
+.claude/
+
+# go
+*.test
+*.out
