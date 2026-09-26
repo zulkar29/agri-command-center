@@ -1,0 +1,201 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "@fontsource/hind-siliguri/bengali-400.css";
+@import "@fontsource/hind-siliguri/bengali-500.css";
+@import "@fontsource/hind-siliguri/bengali-600.css";
+@import "@fontsource/hind-siliguri/bengali-700.css";
+@import "@fontsource/hind-siliguri/latin-400.css";
+@import "@fontsource/hind-siliguri/latin-500.css";
+@import "@fontsource/hind-siliguri/latin-600.css";
+@import "@fontsource/hind-siliguri/latin-700.css";
+
+/* Light theme only. Colors are CSS variables so a fork can re-theme in one place. */
+:root {
+  --radius: 0.875rem;
+
+  --background: #f6f4ed;
+  --foreground: #1a2a21;
+  --card: #ffffff;
+  --card-foreground: #1a2a21;
+  --popover: #ffffff;
+  --popover-foreground: #1a2a21;
+  --primary: #1b6b43;
+  --primary-foreground: #ffffff;
+  --secondary: #efece2;
+  --secondary-foreground: #1a2a21;
+  --muted: #efece3;
+  --muted-foreground: #646b62;
+  --accent: #e4eddc;
+  --accent-foreground: #1a2a21;
+  --destructive: #c0392b;
+  --destructive-foreground: #ffffff;
+  --border: #e6e2d4;
+  --input: #d3cfc0;
+  --ring: #1b6b43;
+
+  --success: #1f7a4d;
+  --success-soft: #eaf6ef;
+  --success-line: #b9dcc9;
+  --success-ink: #1b5e3b;
+  --warning: #b7791f;
+  --warning-soft: #fdf3dc;
+  --warning-line: #f0d9a0;
+  --warning-ink: #8a5a00;
+  --danger-soft: #fdecea;
+  --danger-line: #f3c1bd;
+  --danger-ink: #b3261e;
+  --info: #2563a8;
+  --info-soft: #e8f1fb;
+  --info-line: #bcd5ee;
+  --info-ink: #1d5c9e;
+
+  /* the dark forest sidebar, and the harvest-gold accent used sparingly for highlights */
+  --sidebar: #10281c;
+  --sidebar-foreground: #c9dccf;
+  --sidebar-muted: #7f9a89;
+  --sidebar-border: #1f3d2d;
+  --sidebar-active: #1d4630;
+  --gold: #e3b341;
+  --water: #2f7fc1;
+}
+
+@theme inline {
+  --font-sans: "Hind Siliguri", "Noto Sans Bengali", ui-sans-serif, system-ui, sans-serif;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-success-line: var(--success-line);
+  --color-success-ink: var(--success-ink);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning-line: var(--warning-line);
+  --color-warning-ink: var(--warning-ink);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-line: var(--danger-line);
+  --color-danger-ink: var(--danger-ink);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-info-line: var(--info-line);
+  --color-info-ink: var(--info-ink);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-muted: var(--sidebar-muted);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-active: var(--sidebar-active);
+  --color-gold: var(--gold);
+  --color-water: var(--water);
+  --shadow-card: 0 1px 2px rgb(26 42 33 / 0.05), 0 6px 18px -8px rgb(26 42 33 / 0.12);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background font-sans text-foreground antialiased;
+    font-feature-settings: 'tnum';
+  }
+  h1,
+  h2,
+  h3 {
+    letter-spacing: -0.01em;
+  }
+}
+
+/* Printable reports (pages/reports): the app is hidden and only #print-root prints, so "Save as PDF" gets a clean A4 document. */
+#print-root {
+  display: none;
+}
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm 12mm 16mm;
+    @bottom-center {
+      content: counter(page) " / " counter(pages);
+      font-size: 9pt;
+      color: #646b62;
+    }
+  }
+  html,
+  body {
+    background: #fff !important;
+  }
+  #root {
+    display: none !important;
+  }
+  #print-root {
+    display: block;
+  }
+  #print-root .report-doc {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  #print-root .report-row,
+  #print-root .report-section > h2 {
+    break-inside: avoid;
+  }
+  #print-root .report-section > h2,
+  #print-root .report-hint {
+    break-after: avoid;
+  }
+}
+
+/* Animated links in the devices diagram: dashes travel along the line while data flows. */
+@keyframes flow-x {
+  to {
+    background-position: 16px 0;
+  }
+}
+@keyframes flow-y {
+  to {
+    background-position: 0 16px;
+  }
+}
+.flow-x,
+.flow-y {
+  background-size: 16px 100%;
+  animation: flow-x 0.9s linear infinite;
+}
+.flow-x {
+  background-image: repeating-linear-gradient(90deg, currentColor 0 8px, transparent 8px 16px);
+}
+.flow-y {
+  background-size: 100% 16px;
+  background-image: repeating-linear-gradient(180deg, currentColor 0 8px, transparent 8px 16px);
+  animation-name: flow-y;
+}
+.flow-rev {
+  animation-direction: reverse;
+}
+@media (prefers-reduced-motion: reduce) {
+  .flow-x,
+  .flow-y {
+    animation: none;
+  }
+}
